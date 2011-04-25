@@ -21,13 +21,13 @@ object LuceneBuilder {
     }
     
     val reader = new XMLEventReader(Source.fromFile(path))
-    lazy val urlines = reader map { event:XMLEvent =>
+    val urlines = reader map { event:XMLEvent =>
       event match {
         case EvElemStart(_,"LINE",_,_) => Some(getText(reader))
         case _ => None
       }
     }
-    lazy val lines = urlines filter { aval:Option[String] =>
+    val lines = urlines filter { aval:Option[String] =>
       aval match {
         case Some(astr) => true
         case None => false
@@ -38,8 +38,11 @@ object LuceneBuilder {
 
   def main(args:Array[String]) {
 
-    for (line <- parseScript(args(0))) {
-      println(line.toString)
-    }
+    val pruneRegex = """([a-zA-Z0-9]\S+[a-zA-Z0-9])""".r
+    for {
+      line <- parseScript(args(0))
+      word <- line.split("\\s")
+      prunedword <- pruneRegex findFirstIn word
+    } println(prunedword)
   }
 }
