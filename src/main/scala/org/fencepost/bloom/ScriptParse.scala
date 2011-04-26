@@ -1,11 +1,13 @@
-package org.fencepost.lucene
+package org.fencepost.bloom
 
 import scala.io.Source
 import scala.xml.pull._
 
-object LuceneBuilder {
+// Object which implements logic for parsing a given Shakespearean play in
+// XML format.
+object ScriptParse {
   
-  def parseScript(path:String):Iterator[String] = {
+  def getLines(path:String) = {
     
     def getText(reader:XMLEventReader):String = {
       val event = reader.next
@@ -36,13 +38,14 @@ object LuceneBuilder {
     lines map (_.get)
   }
 
-  def main(args:Array[String]) {
+  def getWords(path:String) = {
 
     val pruneRegex = """([a-zA-Z0-9]\S+[a-zA-Z0-9])""".r
     for {
-      line <- parseScript(args(0))
-      word <- line.split("\\s")
-      prunedword <- pruneRegex findFirstIn word
-    } println(prunedword)
+      line <- getLines(path)
+      word <- line.split("\\s").toIterator
+      prunedword = pruneRegex findFirstIn word
+      if prunedword != None
+    } yield prunedword.get
   }
 }
