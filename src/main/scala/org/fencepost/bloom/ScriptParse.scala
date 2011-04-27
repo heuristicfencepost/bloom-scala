@@ -52,7 +52,7 @@ object ScriptParse {
   def getWords(path:String) = {
 
     val reader = new XMLEventReader(Source.fromFile(path))
-    val pruneRegex = """([a-zA-Z0-9]\S+[a-zA-Z0-9])""".r
+    val pruneRegex = """([a-zA-Z0-9'\-]*[a-zA-Z0-9])""".r
     for {
       line <- getLines(reader)
       word <- line.split("\\s")
