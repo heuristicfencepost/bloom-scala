@@ -7,16 +7,34 @@ import org.apache.commons.lang.math.RandomUtils
 
 import com.facebook.infrastructure.utils.MurmurHash
 
-class BloomFilter(vals:Seq[String],fncount:Int) extends StringFilter {
+class BloomFilter(vals:Stream[String],valcount:Int,fncount:Int) extends StringFilter {
 
   private val hash = new MurmurHash()
-  private val maxval = 65536 // 65536 / 8 bits/byte = 8192 bytes = 8k for storage
+
+  // Assuming a unique value for the output of each function on every input how many
+  // function values will we have?  This won't happen in practice due to hash
+  // collisions.  We multiply by two so that even in this case the filter is only
+  // ~50% full.
+  //
+  // This isn't an ideal implementation of a Bloom filter.  Purging the high bits
+  // from the MurmurHash output increases our false positive rate since a number
+  // of legit hash output values now have the same low n bits.  This is done
+  // as a trade-off to conserve space; Murmur hash is a 32-bit hash so the max
+  // value is 2^32 -1 ~= 4.3B.  Since bit sets are sized based on the largest
+  // possible value this means that in the worst case the bit set consumes
+  // 4.3B/8 bytes ~= 530MB of memory.  Using a scaling factor should greatly
+  // reduce this consumption.
+  private val maxval = valcount * fncount * 2
 
   // Build a consistent set of hash functions to apply to every input val
+  val mask = ~(128 << 24)
   private val fns = (1 to fncount) map { arg =>
 
-    val seed:Int = RandomUtils.nextInt()
-    (subarg:String) => abs(hash.hash(subarg.getBytes,subarg.getBytes.length,seed)) % maxval
+    (subarg:String) => 
+      abs(hash.hash(
+          subarg.getBytes,
+          subarg.getBytes.length,
+          RandomUtils.nextInt())) % maxval
   }
 
   // Evaluate our set of hash functions against the input string and return
