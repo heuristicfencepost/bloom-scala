@@ -8,11 +8,13 @@ class BloomFilterTest extends Suite {
 
   def testBasic() = {
 
-    val membercount = 5000
+    val membercount = 10000
 
     // Generate set of candidates
     val somestrings = for { i <- 1 to membercount } yield RandomStringUtils.randomAscii(24)
-    val bloom = new BloomFilter(somestrings.toStream,8192,1)
+    expect(membercount) { somestrings.size }
+    expect(membercount) { somestrings.toStream.size }
+    val bloom = new BloomFilter(somestrings.toStream,18,2)
     
     // All candidates should be present
     val somematches = somestrings filter { arg => bloom contains arg }
