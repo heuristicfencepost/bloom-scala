@@ -4,7 +4,7 @@ import org.scalatest.Suite
 
 import org.apache.commons.lang.RandomStringUtils
 
-class BloomFilterTest extends Suite {
+class LuceneFilterTest extends Suite {
 
   def testBasic() = {
 
@@ -14,15 +14,15 @@ class BloomFilterTest extends Suite {
     val somestrings = for { i <- 1 to membercount } yield RandomStringUtils.randomAscii(24)
     expect(membercount) { somestrings.size }
     expect(membercount) { somestrings.toStream.size }
-    val bloom = new BloomFilter(somestrings.toStream,18,2)
-    
+    val lucene = new LuceneFilter(somestrings.toStream)
+
     // All candidates should be present
-    val somematches = somestrings filter { arg => bloom contains arg }
+    val somematches = somestrings filter { arg => lucene contains arg }
     expect(membercount) { somematches.size }
 
     // Generate a set of new random strings
     val someotherstrings = for { i <- 1 to membercount } yield RandomStringUtils.randomAscii(24)
-    val someothermatches = someotherstrings filter { arg => bloom contains arg }
+    val someothermatches = someotherstrings filter { arg => lucene contains arg }
 
     val falseposrate = someothermatches.size/membercount
     println("False positive size: " + someothermatches.size + " (" + falseposrate + "%)")

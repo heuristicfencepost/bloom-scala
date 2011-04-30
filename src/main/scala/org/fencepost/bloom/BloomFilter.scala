@@ -44,7 +44,7 @@ class BloomFilter(vals:Stream[String],maskbits:Int,fncount:Int) extends Filter[S
   // set of functions for each input.
   private val bloom = (BitSet() /: (vals map evalAllFns))(_ ++ _)
 
-  override def contains(arg:String) = {
+  override def contains(arg:String):Boolean = {
     evalAllFns(arg) forall (bloom contains _)
   }
 
