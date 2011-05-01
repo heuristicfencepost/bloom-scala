@@ -3,16 +3,18 @@ package org.fencepost.bloom
 import scala.io.Source
 import scala.xml.pull._
 
-// Object which implements logic for parsing a given Shakespearean play in
-// XML format.
+// Parsing implementation for XML representations of Shakespeare plays provided
+// by ibiblio.  This implementation is loosely represented as a finite state
+// machine driven by inputs extracted from Scala's built-in event-based XML
+// parser.
 object ScriptParse {
 
-  // We've seen a LINE element so handle it
-  def handleLine(reader:XMLEventReader):Stream[String] = {
+  // Handle a line to be spoken by an actor
+  private def handleLine(reader:XMLEventReader):Stream[String] = {
 
     reader.next match {
 
-      // straight text gets added to our stream.  We aren't done with the line,
+      // Straight text gets added to our stream.  We aren't done with the line,
       // however, so we append the discovered text to a recursive call to
       // ourselves.  An end event for the LINE element will return us to
       // getLines()
@@ -25,12 +27,13 @@ object ScriptParse {
     }
   }
 
-  // We've seen a STAGEDIR so handle it
-  def handleStagedir(reader:XMLEventReader):Stream[String] = {
+  // Handle a stage direction that might be embedded within a line to
+  // be spoken by an actor.
+  private def handleStagedir(reader:XMLEventReader):Stream[String] = {
 
     reader.next match {
 
-      // stage direction may have internal text.  If it does we aren't done
+      // Stage direction may have internal text.  If it does we aren't done
       // handle the element yet so recursively call ourselves.  Otherwise
       // exit out on an end element.
       case EvText(txt) => handleStagedir(reader)
@@ -40,7 +43,7 @@ object ScriptParse {
 
   // While there's still something to read iterate through the event stream
   // until we find another LINE element.
-  def getLines(reader:XMLEventReader):Stream[String] = {
+  private def getLines(reader:XMLEventReader):Stream[String] = {
 
       if (!reader.hasNext) { return Stream.Empty }
       reader.next match {
@@ -49,6 +52,8 @@ object ScriptParse {
       }
   }
 
+  // The only exposed part of our API; return a stream consisting of all
+  // words found within the script represented by the input argument.
   def getWords(path:String) = {
 
     val reader = new XMLEventReader(Source.fromFile(path))
